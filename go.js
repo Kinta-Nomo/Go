@@ -46,7 +46,7 @@ function isGroupAlive(x, y) {
   
   const check = (x, y) => {
     stack.push([x, y].toString());
-    let cell = board[x][y];
+    const cell = board[x][y]
     
     if (x !== 0 && board[x-1][y][0] === null) alive = true;
     else if (x !== 0 && board[x-1][y][0] === cell[0] && stack.includes([x-1, y].toString)) check(x-1, y);
@@ -65,18 +65,38 @@ function isGroupAlive(x, y) {
   return alive;
 }
 
+function removeGroup(x, y) {
+  const cell_color = board[x][y][0];
+  const clear = (x, y) => {
+    board[x][y][0] = null;
+    
+    if (x !== 0 && board[x-1][y][0] === cell_color) clear(x-1, y);
+    if (x !== size-1 && board[x+1][y][0] === cell_color) clear(x+1, y);
+    if (y !== 0 && board[x][y-1][0] === cell_color) clear(x, y-1);
+    if (y !== size-1 && board[x][y+1][0] === cell_color) clear(x, y+1);
+  }
+  
+  clear(x, y);
+  return;
+}
+
 function updateBoard(x, y) {
-  isGroupAlive(x, y);
+  for (const adjacent of [[x-1, y], [x+1, y], [x, y-1], [x, y+1]]) {
+    console.log(adjacent, isGroupAlive(adjacent[0], adjacent[1]))
+    if (board[adjacent[0]][adjacent[1]] !== void 0 && !isGroupAlive(adjacent[0], adjacent[1])) removeGroup(adjacent[0], adjacent[1]);
+  }
 }
 
 let current_player = 'black';
 
 function mousePressed() {
-  let clicked_cell = board[Math.floor(mouseX/cell_size)][Math.floor(mouseY/cell_size)];
+  const board_x = Math.floor(mouseX/cell_size), 
+        board_y = Math.floor(mouseY/cell_size);
+  let clicked_cell = board[board_x][board_y];
   if (!clicked_cell[0]) {
     clicked_cell[0] = current_player;
     current_player = (current_player == 'black') ? 'white' : 'black';
+    updateBoard(board_x, board_y);
     drawBoard();
-    updateBoard(Math.floor(mouseX/cell_size), Math.floor(mouseY/cell_size));
   }
 }
